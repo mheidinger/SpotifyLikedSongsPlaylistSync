@@ -1,0 +1,23 @@
+{
+  "name": "spotify-liked-songs-playlist-sync",
+  "version": "1.0.0",
+  "description": "Syncs liked songs from Spotify to a playlist",
+  "scripts": {
+    "start": "bun src/index.ts",
+    "format": "prettier --write ."
+  },
+  "author": "Max Heidinger",
+  "license": "MIT",
+  "dependencies": {
+    "@spotify/web-api-ts-sdk": "^1.2.0",
+    "open": "^10.0.3",
+    "querystring": "^0.2.1",
+    "randomstring": "^1.3.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.0.4",
+    "@types/randomstring": "^1.1.11",
+    "prettier": "^3.2.4"
+  }
+}
