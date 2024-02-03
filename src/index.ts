@@ -1,8 +1,8 @@
 import { Scopes } from "@spotify/web-api-ts-sdk";
 import { parseArgs } from "util";
 import type { SpotifyConfig } from "./domain/SpotifyConfig";
-import getAuthToken from "./auth";
-import createSpotifyClient from "./spotify";
+import createClient from "./client";
+import createClientWrapper from "./client-wrapper";
 import trackDiff from "./diff";
 
 const clientId = process.env["SPOTIFY_CLIENT_ID"];
@@ -35,8 +35,8 @@ const spotifyConfig: SpotifyConfig = {
   scopes: [...Scopes.playlist, ...Scopes.userLibraryRead],
 };
 
-const token = await getAuthToken(spotifyConfig);
-const spotify = createSpotifyClient(spotifyConfig, token);
+const client = await createClient(spotifyConfig);
+const spotify = createClientWrapper(client);
 
 let targetPlaylistId = process.env["SPOTIFY_TARGET_PLAYLIST_ID"];
 if (!targetPlaylistId) {

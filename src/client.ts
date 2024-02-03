@@ -2,7 +2,7 @@ import type { SpotifyConfig } from "./domain/SpotifyConfig";
 import randomstring from "randomstring";
 import querystring from "querystring";
 import open from "open";
-import type { AccessToken } from "@spotify/web-api-ts-sdk";
+import { SpotifyApi, type AccessToken } from "@spotify/web-api-ts-sdk";
 import { z } from "zod";
 
 const CACHE_PATH = "tokenCache.json";
@@ -12,6 +12,7 @@ const AccessTokenSchema: z.ZodType<AccessToken> = z.object({
   token_type: z.string(),
   expires_in: z.number(),
   refresh_token: z.string(),
+  expires: z.number().optional(),
 });
 
 function getAuthorizeUrl(spotifyConfig: SpotifyConfig) {
@@ -82,13 +83,25 @@ async function tokenServer(spotifyConfig: SpotifyConfig): Promise<AccessToken> {
   return token;
 }
 
-async function getTokenFromCache(): Promise<AccessToken | null> {
+async function getClientFromCache(
+  clientId: string,
+): Promise<SpotifyApi | null> {
   try {
     const cacheFile = Bun.file(CACHE_PATH);
     const fileContent = await cacheFile.json();
-    return AccessTokenSchema.parse(fileContent);
+    const cacheToken = AccessTokenSchema.parse(fileContent);
+
+    const client = SpotifyApi.withAccessToken(clientId, cacheToken);
+    const authResponse = await client.authenticate();
+    if (!authResponse.authenticated) {
+      return null;
+    }
+
+    return client;
   } catch (e) {
-    console.log("Token Cache not found or invalid, starting auth flow");
+    console.log(
+      "Token Cache not found, invalid or expired. Starting auth flow.",
+    );
   }
 
   return null;
@@ -102,18 +115,25 @@ async function writeTokenToCache(token: AccessToken) {
   }
 }
 
-export default async function getAuthToken(
+export default async function createClient(
   spotifyConfig: SpotifyConfig,
-): Promise<AccessToken> {
-  const cachedToken = await getTokenFromCache();
-  if (cachedToken) {
-    return cachedToken;
+): Promise<SpotifyApi> {
+  let client = await getClientFromCache(spotifyConfig.clientId);
+  if (!client) {
+    const tokenPromise = tokenServer(spotifyConfig);
+    open(getAuthorizeUrl(spotifyConfig));
+
+    client = SpotifyApi.withAccessToken(
+      spotifyConfig.clientId,
+      await tokenPromise,
+    );
   }
 
-  const tokenPromise = tokenServer(spotifyConfig);
-  open(getAuthorizeUrl(spotifyConfig));
+  // Fetch token from client to have expiry field filled in the cache
+  const token = await client.getAccessToken();
+  if (token) {
+    writeTokenToCache(token);
+  }
 
-  const token = await tokenPromise;
-  writeTokenToCache(token);
-  return token;
+  return client;
 }

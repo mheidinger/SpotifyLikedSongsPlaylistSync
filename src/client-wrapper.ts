@@ -1,10 +1,8 @@
 import {
   SpotifyApi,
-  type AccessToken,
   type SimplifiedPlaylist,
   type SimplifiedTrack,
 } from "@spotify/web-api-ts-sdk";
-import type { SpotifyConfig } from "./domain/SpotifyConfig";
 
 async function getUserPlaylists(
   spotify: SpotifyApi,
@@ -89,11 +87,7 @@ async function removeTracksFromPlaylist(
   await spotify.playlists.removeItemsFromPlaylist(playlistId, { tracks });
 }
 
-export default function createSpotifyClient(
-  spotifyConfig: SpotifyConfig,
-  token: AccessToken,
-) {
-  const spotify = SpotifyApi.withAccessToken(spotifyConfig.clientId, token);
+export default function createClientWrapper(spotify: SpotifyApi) {
   return {
     getUserPlaylists: () => getUserPlaylists(spotify),
     getUserLikedTracks: () => getUserLikedTracks(spotify),
