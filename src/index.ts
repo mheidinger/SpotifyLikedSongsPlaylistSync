@@ -7,7 +7,7 @@ import trackDiff from "./diff";
 
 const clientId = process.env["SPOTIFY_CLIENT_ID"];
 const clientSecret = process.env["SPOTIFY_CLIENT_SECRET"];
-const redirectUri = "http://localhost:3000/callback";
+const redirectUri = "https://localhost-redirect.max-heidinger.de/3000/callback";
 
 if (!clientId || !clientSecret) {
   throw new Error("⚠️ Missing Spotify credentials");
@@ -54,7 +54,7 @@ const [likedTracks, playlistTracks] = await Promise.all([
   spotify.getPlaylistTracks(targetPlaylistId),
 ]);
 
-console.log("♥️  Liked tracks:", likedTracks.length);
+console.log("♥️ Liked tracks:", likedTracks.length);
 console.log("🎶 Playlist tracks:", playlistTracks.length);
 console.log();
 
@@ -63,6 +63,7 @@ const { missingTracks, additionalTracks } = trackDiff(
   likedTracks,
   playlistTracks,
 );
+console.log();
 
 if (missingTracks) {
   console.log("❓ Missing tracks to be added:", missingTracks.length);
